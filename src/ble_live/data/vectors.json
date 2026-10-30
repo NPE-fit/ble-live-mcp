@@ -1,0 +1,134 @@
+{
+  "description": "Golden BLE Live frames. `payload_hex` starts at the Data Identifier byte, i.e. after the 4-byte device ID (and after the 4-byte IV counter for 0xFD). Spec examples omit the device ID.",
+  "frames": [
+    {
+      "id": "appendix-b-dpi",
+      "source": "spec 1.7.0 Appendix B, DPI Example",
+      "kind": "DPI",
+      "payload_hex": "FF 01 01 00 00 00 00 00 00",
+      "expect": {"dfv_indexes": [0, 8]}
+    },
+    {
+      "id": "appendix-b-dfd-0",
+      "source": "spec 1.7.0 Appendix B, DFD Index:0",
+      "kind": "DFD",
+      "payload_hex": "40 00 02 04 07 0B",
+      "expect": {"dfv": 0, "category": "fitness", "field_indexes": [0, 2, 4, 7, 11]}
+    },
+    {
+      "id": "appendix-b-dfv-0-all",
+      "source": "spec 1.7.0 Appendix B, DFV Index:0, all fields",
+      "kind": "DFV",
+      "dfd": "appendix-b-dfd-0",
+      "payload_hex": "00 1F 62 91 6A 01 28 0A 05 0E",
+      "expect": {"heart_rate": 98, "step_rate": 145, "active_calories": 362, "accumulated_distance": 2600, "step_count": 3589}
+    },
+    {
+      "id": "appendix-b-dfv-0-split-a",
+      "source": "spec 1.7.0 Appendix B, DFV Index:0, two transmissions (first)",
+      "kind": "DFV",
+      "dfd": "appendix-b-dfd-0",
+      "payload_hex": "00 13 62 91 05 0E",
+      "expect": {"heart_rate": 98, "step_rate": 145, "step_count": 3589}
+    },
+    {
+      "id": "appendix-b-dfv-0-split-b",
+      "source": "spec 1.7.0 Appendix B, DFV Index:0, two transmissions (second)",
+      "kind": "DFV",
+      "dfd": "appendix-b-dfd-0",
+      "payload_hex": "00 0C 6A 01 28 0A",
+      "expect": {"active_calories": 362, "accumulated_distance": 2600}
+    },
+    {
+      "id": "appendix-b-dfd-8",
+      "source": "spec 1.7.0 Appendix B, DFD Index:8",
+      "kind": "DFD",
+      "payload_hex": "48 00 01 02 03 04 05 0A 0A",
+      "expect": {"dfv": 8, "category": "meta", "field_indexes": [0, 1, 2, 3, 4, 5, 10, 10]}
+    },
+    {
+      "id": "appendix-b-dfv-8-a",
+      "source": "spec 1.7.0 Appendix B, DFV Index:8 (first)",
+      "kind": "DFV",
+      "dfd": "appendix-b-dfd-8",
+      "payload_hex": "08 1E 4E 7F 01 01 00 04 00",
+      "known_inconsistency": "The example encodes Hardware Version (meta 4) as two bytes; Table 6 defines it as Uint8. GatewayKit also reads u16.",
+      "expect": {"battery_percent": 78, "battery_voltage": 383, "model_number": 1, "hardware_version": 4}
+    },
+    {
+      "id": "appendix-b-dfv-8-b",
+      "source": "spec 1.7.0 Appendix B, DFV Index:8 (second)",
+      "kind": "DFV",
+      "dfd": "appendix-b-dfd-8",
+      "payload_hex": "08 E1 01 41 05 78 15",
+      "expect": {"protocol_version": 1, "firmware_version": 1345, "equipment_type": [120, 21]}
+    },
+    {
+      "id": "wymu-1.7.0-dpi",
+      "source": "WYMU live flavor, BLE Live v1.7.0 (generated encoder; verified on air 2026-10-28)",
+      "kind": "DPI",
+      "payload_hex": "FF 01 03",
+      "expect": {"dfv_indexes": [0, 8, 9], "truncated": true}
+    },
+    {
+      "id": "wymu-1.7.0-dfd-0",
+      "source": "WYMU live flavor, BLE Live v1.7.0",
+      "kind": "DFD",
+      "payload_hex": "40 08 10 11",
+      "expect": {"dfv": 0, "category": "fitness", "field_indexes": [8, 16, 17]}
+    },
+    {
+      "id": "wymu-1.7.0-dfv-0",
+      "source": "WYMU live flavor, BLE Live v1.7.0 (synthetic values in the generated layout)",
+      "kind": "DFV",
+      "dfd": "wymu-1.7.0-dfd-0",
+      "payload_hex": "00 07 20 00 05 A0 00",
+      "expect": {"power": 32, "power_event_count": 5, "accumulated_power": 160}
+    },
+    {
+      "id": "wymu-1.7.0-dfd-8",
+      "source": "WYMU live flavor, BLE Live v1.7.0",
+      "kind": "DFD",
+      "payload_hex": "48 00 02 07 08 0A",
+      "expect": {"dfv": 8, "category": "meta", "field_indexes": [0, 2, 7, 8, 10]}
+    },
+    {
+      "id": "wymu-1.7.0-dfv-8",
+      "source": "WYMU live flavor, BLE Live v1.7.0 (synthetic values in the generated layout)",
+      "kind": "DFV",
+      "dfd": "wymu-1.7.0-dfd-8",
+      "payload_hex": "08 1F 01 2C 01 02 02 0B",
+      "expect": {"protocol_version": 1, "battery_voltage": 300, "supported_ble_connections": 2, "available_ble_connections": 2, "equipment_type": 11},
+      "notes": "Equipment Type 11 here means the ANT+ bike power device type, not Table 10's Running Speed."
+    },
+    {
+      "id": "wymu-1.7.0-dfd-9",
+      "source": "WYMU live flavor, BLE Live v1.7.0",
+      "kind": "DFD",
+      "payload_hex": "49 05 03 0B",
+      "expect": {"dfv": 9, "category": "meta", "field_indexes": [5, 3, 11]},
+      "notes": "Firmware Version is listed first so the DFD does not start with 0x03, which GatewayKit's beta-DFD heuristic would drop as a flag byte."
+    },
+    {
+      "id": "wymu-1.7.0-dfv-9",
+      "source": "WYMU live flavor, BLE Live v1.7.0 (synthetic values in the generated layout)",
+      "kind": "DFV",
+      "dfd": "wymu-1.7.0-dfd-9",
+      "payload_hex": "09 07 03 10 00 8E 42 00",
+      "expect": {"firmware_version": 4099, "model_number": 36352, "ant_manufacturer_id": 66}
+    }
+  ],
+  "rotations": [
+    {
+      "id": "spec-fast-advertising",
+      "source": "spec 1.7.0, Data Rotation Example, fast advertising",
+      "frames": ["appendix-b-dpi", "appendix-b-dfd-0", "appendix-b-dfv-0-all", "appendix-b-dfd-8", "appendix-b-dfv-8-a", "appendix-b-dfv-0-all", "appendix-b-dfv-8-b"]
+    },
+    {
+      "id": "wymu-1.7.0",
+      "source": "WYMU live flavor firmware rotation (36 frames stepped every 556.25 ms)",
+      "notes": "DFD 0/8/9 recur every 6 frames (worst DFD gap 3.9 s); DPI, DFV 8 and DFV 9 once per 20 s; DFV 0 in 15 of 36 frames.",
+      "frames": []
+    }
+  ]
+}

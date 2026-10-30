@@ -1,0 +1,499 @@
+{
+  "spec_version": "1.7.0",
+  "revdate": "October 28, 2026",
+  "source": "ble-live-protocol.adoc",
+  "ad_types": {
+    "plain": "0xFE",
+    "encrypted": "0xFD"
+  },
+  "data_identifiers": {
+    "dpi": "0xFF",
+    "dfa": "0xFE",
+    "dfd_bit": "0x40"
+  },
+  "fitness_fields": [
+    {
+      "index": 0,
+      "name": "Heart Rate",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "1 BPM"
+    },
+    {
+      "index": 1,
+      "name": "Cadence",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "1 RPM"
+    },
+    {
+      "index": 2,
+      "name": "Step Rate",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "steps per minute"
+    },
+    {
+      "index": 3,
+      "name": "Stride Rate",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "strides per minute",
+      "notes": "of the foot the device is mounted on striking the ground"
+    },
+    {
+      "index": 4,
+      "name": "Active Calories",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "1 kCal"
+    },
+    {
+      "index": 5,
+      "name": "Total Calories",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "1 kCal"
+    },
+    {
+      "index": 6,
+      "name": "Speed",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "1/100 KPH"
+    },
+    {
+      "index": 7,
+      "name": "Accumulated Distance",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "1m"
+    },
+    {
+      "index": 8,
+      "name": "Power",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "1 W"
+    },
+    {
+      "index": 9,
+      "name": "Instantaneous Pace (Time per 500 meters)",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16"
+    },
+    {
+      "index": 10,
+      "name": "Workout State",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "TBD"
+    },
+    {
+      "index": 11,
+      "name": "Step Count",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "UInt16",
+      "units": "1 Step"
+    },
+    {
+      "index": 12,
+      "name": "Stride Count",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "UInt16",
+      "units": "1 Stride"
+    },
+    {
+      "index": 13,
+      "name": "Temperature",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "UInt16",
+      "units": "0.01C"
+    },
+    {
+      "index": 14,
+      "name": "Heart Beat Count",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "Count"
+    },
+    {
+      "index": 15,
+      "name": "Heart Rate Confidence",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "1%"
+    },
+    {
+      "index": 16,
+      "name": "Power Event Count",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "Count, rolls over at 255",
+      "notes": "Incremented each time Power is updated, in the same transmit page as Power"
+    },
+    {
+      "index": 17,
+      "name": "Accumulated Power",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "UInt16",
+      "units": "1 W, rolls over at 65535",
+      "notes": "Running sum of the Power value at each Power Event Count increment"
+    },
+    {
+      "index": 254,
+      "name": "R-R Intervals",
+      "type": "uint16",
+      "size_bytes": null,
+      "array": true,
+      "element_size_bytes": 2,
+      "size_raw": "UInt16 per interval",
+      "units": "milliseconds per interval",
+      "notes": "R-R Intervals should be preceded by the Heart Beat Count in the transmit page. R-R Intervals should always be the last field present in the definition for the DFV so there can be multiple intervals sent in the payload. The decode should process the interval fields until the end of the message is reached."
+    },
+    {
+      "index": 255,
+      "name": "Unused",
+      "type": null,
+      "size_bytes": null,
+      "size_raw": ""
+    }
+  ],
+  "meta_fields": [
+    {
+      "index": 0,
+      "name": "Protocol Version",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8"
+    },
+    {
+      "index": 1,
+      "name": "Battery Percent",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8",
+      "units": "1 %"
+    },
+    {
+      "index": 2,
+      "name": "Battery Voltage",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16",
+      "units": "0.01 V"
+    },
+    {
+      "index": 3,
+      "name": "Model #",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16"
+    },
+    {
+      "index": 4,
+      "name": "Hardware Version",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8"
+    },
+    {
+      "index": 5,
+      "name": "Firmware Version",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16"
+    },
+    {
+      "index": 6,
+      "name": "Bootloader Version",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "Uint16"
+    },
+    {
+      "index": 7,
+      "name": "Supported BLE Connections",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8"
+    },
+    {
+      "index": 8,
+      "name": "Available BLE Connections",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "Uint8"
+    },
+    {
+      "index": 9,
+      "name": "RSSI Measured at 1m",
+      "type": "int8",
+      "size_bytes": 1,
+      "size_raw": "Sint8"
+    },
+    {
+      "index": 10,
+      "name": "Equipment Type",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "Refer to table Table 7: Equipment Type"
+    },
+    {
+      "index": 11,
+      "name": "ANT+ Manufacturer ID",
+      "type": "uint16",
+      "size_bytes": 2,
+      "size_raw": "UInt16",
+      "units": "Refer to FIT SDK for assigned values"
+    },
+    {
+      "index": 12,
+      "name": "LED Intensity",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "1%"
+    },
+    {
+      "index": 13,
+      "name": "Zone Threshold FDI",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8"
+    },
+    {
+      "index": 14,
+      "name": "Zone Threshold Size",
+      "type": "uint8",
+      "size_bytes": 1,
+      "size_raw": "UInt8",
+      "units": "Size in bits of the values in the threshold array"
+    },
+    {
+      "index": 15,
+      "name": "Zone Thresholds",
+      "type": null,
+      "size_bytes": null,
+      "variable": true,
+      "size_raw": "sizeof(FDI type)",
+      "units": "An array of values defining the set points of the zone adjustment handles. The thresholds are arrange in order starting at index 0. All thresholds are set in one DFV.",
+      "notes": "Zone Thresholds should be preceded by the size in bits to indicate how large each of the zone values in the array."
+    },
+    {
+      "index": 255,
+      "name": "Unused",
+      "type": null,
+      "size_bytes": null,
+      "size_raw": ""
+    }
+  ],
+  "equipment_types": [
+    {
+      "index": 1,
+      "name": "Foot Pod"
+    },
+    {
+      "index": 2,
+      "name": "Treadmill"
+    },
+    {
+      "index": 3,
+      "name": "Rower"
+    },
+    {
+      "index": 4,
+      "name": "Climber"
+    },
+    {
+      "index": 5,
+      "name": "Indoor Cycling"
+    },
+    {
+      "index": 6,
+      "name": "Cross Trainer"
+    },
+    {
+      "index": 7,
+      "name": "Bike Power Meter"
+    },
+    {
+      "index": 8,
+      "name": "Cycling Speed"
+    },
+    {
+      "index": 9,
+      "name": "Cycling Cadence"
+    },
+    {
+      "index": 10,
+      "name": "Running Cadence"
+    },
+    {
+      "index": 11,
+      "name": "Running Speed"
+    },
+    {
+      "index": 12,
+      "name": "Running Dynamics"
+    },
+    {
+      "index": 13,
+      "name": "Sweat"
+    },
+    {
+      "index": 14,
+      "name": "Temperature"
+    },
+    {
+      "index": 21,
+      "name": "Activity Monitor"
+    },
+    {
+      "index": 120,
+      "name": "Heart Rate Monitor"
+    }
+  ],
+  "di_ranges": [
+    {
+      "range": "0:63",
+      "meaning": "Data Field Values",
+      "sub": [
+        {
+          "range": "0:7",
+          "meaning": "Fitness Data Values"
+        },
+        {
+          "range": "8:15",
+          "meaning": "Meta Data Values"
+        },
+        {
+          "range": "16:59",
+          "meaning": "Reserved"
+        },
+        {
+          "range": "60-63",
+          "meaning": "Manufacturer Specific Data Values"
+        }
+      ]
+    },
+    {
+      "range": "64:127",
+      "meaning": "Data Field Definitions",
+      "sub": [
+        {
+          "range": "64:71",
+          "meaning": "Fitness Data Definitions"
+        },
+        {
+          "range": "72:79",
+          "meaning": "Meta Data Definitions"
+        },
+        {
+          "range": "80:123",
+          "meaning": "Reserved"
+        },
+        {
+          "range": "124-127",
+          "meaning": "Manufacturer Specific Data Definitions"
+        }
+      ]
+    },
+    {
+      "range": "128:254",
+      "meaning": "Reserved",
+      "sub": []
+    },
+    {
+      "range": "254",
+      "meaning": "Data Field Attributes",
+      "sub": []
+    },
+    {
+      "range": "255",
+      "meaning": "Data Presence Identifier",
+      "sub": []
+    }
+  ],
+  "revisions": [
+    {
+      "date": "10/28/2026",
+      "version": "1.7.0",
+      "author": "Sebastian Barnowski",
+      "description": "Add Power Event Count and Accumulated Power to the fitness data fields"
+    },
+    {
+      "date": "08/20/2025",
+      "version": "1.6.0",
+      "author": "Sebastian Barnowski",
+      "description": "Add BLE Live Encrypted Data Packet"
+    },
+    {
+      "date": "11/14/2024",
+      "version": "1.5.1",
+      "author": "Rick Gibbs",
+      "description": "Added Zone Threshold Size"
+    },
+    {
+      "date": "11/10/2024",
+      "version": "1.5.0",
+      "author": "Rick Gibbs",
+      "description": "Add Zone Thresholds and LED Intensity"
+    },
+    {
+      "date": "7/31/2024",
+      "version": "1.4.0",
+      "author": "Sebastian Barnowski",
+      "description": "Add Heart Beat count DFV/DFD"
+    },
+    {
+      "date": "9/8/2023",
+      "version": "1.3.0",
+      "author": "Sebastian Barnowski",
+      "description": "Add embedded reference design description"
+    },
+    {
+      "date": "6/28/2023",
+      "version": "1.2",
+      "author": "Sebastian Barnowski",
+      "description": "Add Manufacturer Specific Data Fields Add temperature to FE data"
+    },
+    {
+      "date": "1/6/2023",
+      "version": "1.1",
+      "author": "Richard Gibbs",
+      "description": "Fixed definition of the DFF to only include it in the DFV packets. Allowed the DPI packet to be truncated if the upper indexes are not present."
+    },
+    {
+      "date": "12/23/2022",
+      "version": "1.0",
+      "author": "Richard Gibbs",
+      "description": "Added an example appendix"
+    },
+    {
+      "date": "8/31/2022",
+      "version": "1.0",
+      "author": "Richard Gibbs",
+      "description": "Initial version"
+    }
+  ]
+}
