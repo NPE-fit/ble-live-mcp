@@ -21,10 +21,9 @@ def test_wymu_config_lints_clean_but_notes_rotation():
     assert codes(findings, "error") == []
     assert "legacy-rotation" in codes(findings, "warning")
     assert "equipment-type-numbering" in codes(findings, "info")
-    # live.xlsx lists Model Number (0x03) first in DFV 9 followed by two fields: GatewayKit
-    # would drop the 0x03 as a flag byte. The WYMU firmware reorders to FW, Model, Mfr.
-    heuristic = [f for f in findings if f.code == "gatewaykit-dfd-heuristic"]
-    assert len(heuristic) == 1 and heuristic[0].where == "DFV 9"
+    # DFV 9 lists Firmware Version (0x05) before Model Number (0x03), so the DFD does not start
+    # with a byte GatewayKit's beta-DFD heuristic would drop as a flag.
+    assert "gatewaykit-dfd-heuristic" not in codes(findings)
     # the generator writes all 8 DPI bytes, so the DPI is the largest frame of the emulator
     largest = next(f for f in findings if f.code == "largest-frame")
     assert "0xFF" in largest.message and "28 of 31" in largest.message
