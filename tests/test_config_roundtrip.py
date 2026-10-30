@@ -22,16 +22,9 @@ def test_import_live_xlsx_shape():
     )
     assert [f.value for f in fitness.included] == [8, 16, 17]
     assert {f.dfv for f in fitness.included} == {0}
-    assert isinstance(meta, Struct) and [f.value for f in meta.included] == [
-        0,
-        2,
-        3,
-        5,
-        7,
-        8,
-        10,
-        11,
-    ]
+    # Firmware Version (5) is listed before Model Number (3) so DFD 9 starts with 0x05
+    assert isinstance(meta, Struct)
+    assert [f.value for f in meta.included] == [0, 2, 5, 3, 7, 8, 10, 11]
     assert isinstance(equipment, Enum)
     assert [m.value for m in equipment.members if not m.include] == [11]  # Running Speed clashes
     assert equipment.notes and "GatewayKit" in equipment.notes
