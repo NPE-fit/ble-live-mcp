@@ -39,3 +39,7 @@ src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# scaffold.py holds C, C#, Kotlin and Swift source as template strings
+"src/ble_live/scaffold.py" = ["E501"]

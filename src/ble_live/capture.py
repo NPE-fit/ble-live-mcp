@@ -5,6 +5,8 @@ Supported inputs:
   each frame is an AD structure, a whole advertising payload, or device-id-first data.
 - nRF Connect for Mobile text: lines containing `Unknown EIR (0xFE): <hex>` (or 0xFD), which is
   the structure data without length and type.
+- scan: any hex dump (GEM3 datagrams, sniffer output); every plausible 0xFE/0xFD structure found
+  in the bytes of a line becomes a record. Non-hex tokens are ignored.
 """
 
 from __future__ import annotations
@@ -13,7 +15,18 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from .codec import Decoder, LiveFrame, hex_to_bytes, parse_frame, parse_live_data
+from . import spec
+from .codec import (
+    AD_TYPE_LIVE,
+    AD_TYPE_LIVE_ENCRYPTED,
+    Decoder,
+    LiveFrame,
+    hex_to_bytes,
+    parse_frame,
+    parse_live_data,
+)
+
+HEX_TOKEN_RE = re.compile(r"(?<![0-9A-Za-z])(?:0x)?([0-9A-Fa-f]{2})(?![0-9A-Za-z])")
 
 NRF_RE = re.compile(
     r"0x(FE|FD)\)?\s*:\s*(?:0x)?([0-9A-Fa-f]{2}(?:[\s:,-]*(?:0x)?[0-9A-Fa-f]{2})*)", re.I
@@ -42,11 +55,40 @@ def _timestamp(text: str | None) -> float | None:
     return float(text)
 
 
+def scan_live_structures(blob: bytes) -> list[bytes]:
+    """Find plausible BLE Live AD structures anywhere in a byte blob: a length byte, 0xFE or
+    0xFD, a complete header and a data identifier that is a DPI, DFD or DFV."""
+    found: list[bytes] = []
+    i = 0
+    while i + 1 < len(blob):
+        length, ad_type = blob[i], blob[i + 1]
+        if ad_type in (AD_TYPE_LIVE, AD_TYPE_LIVE_ENCRYPTED):
+            header = 9 if ad_type == AD_TYPE_LIVE_ENCRYPTED else 5
+            end = i + 1 + length
+            if header <= length <= 30 and end <= len(blob):
+                di = blob[i + 1 + header]
+                if spec.di_kind(di) in ("DPI", "DFD", "DFV"):
+                    found.append(bytes(blob[i:end]))
+                    i = end
+                    continue
+        i += 1
+    return found
+
+
 def parse_capture(text: str, fmt: str = "auto") -> tuple[list[CaptureRecord], list[str]]:
     records: list[CaptureRecord] = []
     skipped: list[str] = []
     for no, line in enumerate(text.splitlines(), start=1):
         if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        if fmt == "scan":
+            h = HEX_LINE_RE.match(line)
+            ts = _timestamp(h.group("ts")) if h else None
+            blob = bytes(int(t, 16) for t in HEX_TOKEN_RE.findall(line))
+            structures = scan_live_structures(blob)
+            if not structures:
+                skipped.append(f"line {no}: no BLE Live structure found")
+            records += [CaptureRecord(no, ts, s, form="ad") for s in structures]
             continue
         m = NRF_RE.search(line) if fmt in ("auto", "nrf-connect") else None
         if m:
@@ -79,6 +121,8 @@ def parse_capture(text: str, fmt: str = "auto") -> tuple[list[CaptureRecord], li
 def _frame(record: CaptureRecord) -> LiveFrame:
     if record.form == "data":
         return parse_live_data(record.raw, encrypted=bool(record.encrypted_hint))
+    if record.form == "ad":
+        return parse_frame(record.raw, "ad")
     try:
         return parse_frame(record.raw, "auto")
     except ValueError:

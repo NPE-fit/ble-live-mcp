@@ -58,6 +58,27 @@
       "verified": "2026-10-28"
     },
     {
+      "id": "wasp-dotnet-first-dfd-wins",
+      "receiver": "WASP .NET library (BluetoothLive.ParseLiveData)",
+      "summary": "Stores the first DFD it sees for each index and never updates it, and silently drops a DFV whose DFD it has not seen.",
+      "rule": "A device must not change a DFD's field list while running; a receiver that missed the DFD shows nothing until restarted, so send DFDs often (fast phase and every 4 s).",
+      "verified": "2026-10-29"
+    },
+    {
+      "id": "wasp-dotnet-ignores-dpi",
+      "receiver": "WASP .NET library",
+      "summary": "Has no handling for the DPI (0xFF); it learns packets from DFDs alone.",
+      "rule": "Do not rely on the DPI for discovery; the DFDs must be complete on their own.",
+      "verified": "2026-10-29"
+    },
+    {
+      "id": "wasp-dotnet-meta-14-15",
+      "receiver": "WASP .NET library",
+      "summary": "Its meta table has 14 = Zone Thresholds (byte array) and 15 = UI Characteristics, while spec 1.5.1+ has 14 = Zone Threshold Size and 15 = Zone Thresholds. Indexes 0-13 and the fitness table agree with the spec (Hardware Version is one byte there).",
+      "rule": "Avoid meta indexes 14 and 15 until the library and the spec agree.",
+      "verified": "2026-10-29"
+    },
+    {
       "id": "nordic-sdk-advdata-patch",
       "receiver": "n/a (sensor side)",
       "summary": "nRF5 SDK's ble_advdata has no AD type 0xFE/0xFD; the reference design patches ble_advdata.c/.h with ble_advdata_live_data_t and p_live_broadcast_data.",

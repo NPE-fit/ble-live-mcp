@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import spec
+from .crypto import DEFAULT_NONCE, KeyRing, crypt_payload
 
 AD_TYPE_LIVE = spec.AD_TYPE_PLAIN
 AD_TYPE_LIVE_ENCRYPTED = spec.AD_TYPE_ENCRYPTED
@@ -227,6 +228,7 @@ class DecodedFrame:
     field_indexes: list[int] | None = None
     warnings: list[str] = field(default_factory=list)
     error: str | None = None
+    decrypted: bool = False
 
     def values(self) -> dict[str, int | list[int] | None]:
         """Field values by key; a key that repeats in the frame becomes a list."""
@@ -253,6 +255,7 @@ class DecodedFrame:
         }
         if self.frame.encrypted:
             d["iv_counter"] = self.frame.iv_counter
+            d["decrypted"] = self.decrypted
         if self.kind == "DPI":
             d["dfv_indexes_present"] = self.dfv_indexes_present
         if self.kind == "DFD":
@@ -372,8 +375,9 @@ def decode_dfv_payload(
 class Decoder:
     """Stateful decoder: remembers each device's DPI and DFDs so DFVs can be interpreted."""
 
-    def __init__(self) -> None:
+    def __init__(self, keys: KeyRing | None = None) -> None:
         self.devices: dict[int, DeviceState] = {}
+        self.keys = keys or KeyRing()
 
     def state(self, device_id: int) -> DeviceState:
         return self.devices.setdefault(device_id, DeviceState())
@@ -394,8 +398,13 @@ class Decoder:
         st.kinds[kind] += 1
         out = DecodedFrame(frame=frame, kind=kind)
         if frame.encrypted:
-            out.error = "encrypted payload (0xFD); decryption needs the shared key (Phase 2)"
-            return out
+            plain = self.keys.decrypt(frame.device_id, frame.iv_counter or 0, frame.payload)
+            if plain is None:
+                out.error = "encrypted payload (0xFD); no key for this device (set_session_key)"
+                return out
+            frame = LiveFrame(frame.device_id, frame.data_identifier, plain, True, frame.iv_counter)
+            out.frame = frame
+            out.decrypted = True
         if kind == "DPI":
             bits = [
                 i * 8 + b for i, byte in enumerate(frame.payload) for b in range(8) if byte >> b & 1
@@ -505,6 +514,14 @@ def encode_dfv(
     if leftover:
         raise ValueError(f"values for fields not in the DFD or given too often: {sorted(leftover)}")
     return bytes([flag]) + bytes(out)
+
+
+def encrypt_frame(
+    frame: LiveFrame, key: bytes, iv_counter: int, nonce: bytes = DEFAULT_NONCE
+) -> LiveFrame:
+    """The 0xFD form of a plain frame: payload XOR AES-128(key, nonce || counter)."""
+    sealed = crypt_payload(key, iv_counter, frame.payload, nonce)
+    return LiveFrame(frame.device_id, frame.data_identifier, sealed, True, iv_counter)
 
 
 # -- advertising budget -----------------------------------------------------------------------

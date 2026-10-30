@@ -26,9 +26,9 @@ Claude Code / Cursor / VS Code configuration (adjust the path):
 
 Without an install: `"command": "python", "args": ["-m", "ble_live.server"]` with
 `PYTHONPATH` pointing at `mcp/src`. The repository's `.mcp.json` does exactly that, so Claude
-Code opened on this checkout loads the server automatically (it needs `pip install mcp openpyxl`). `BLE_LIVE_ROOT` is only needed when the package does not run
-from inside this checkout; it locates `ble_live_base.c/.h` and `live.xlsx` for
-`generate_firmware` and `example_config`.
+Code opened on this checkout loads the server automatically (it needs `pip install mcp openpyxl`).
+`BLE_LIVE_ROOT` is only needed when the package does not run from inside this checkout; it
+locates `ble_live_base.c/.h` and `live.xlsx` for `generate_firmware` and `example_config`.
 
 | Surface | Name | What it does |
 |---|---|---|
@@ -37,23 +37,32 @@ from inside this checkout; it locates `ble_live_base.c/.h` and `live.xlsx` for
 | resource | `spec://ble-live/di-ranges`, `vectors://frames`, `quirks://receivers` | DI map, golden frames, receiver deviations |
 | resource | `refdesign://templates/{name}` | `ble_live_base.c` / `.h` |
 | tool | `spec_search`, `spec_section`, `list_fields`, `list_quirks` | look things up |
-| tool | `decode_frame`, `decode_capture`, `session_state`, `reset_session` | stateful decoding of frames, hex lines or nRF Connect text |
-| tool | `encode_frame`, `validate_advert` | build DPI/DFD/DFV frames; 31-byte budget |
+| tool | `decode_frame`, `decode_capture`, `session_state`, `reset_session` | stateful decoding of frames; captures as hex lines, nRF Connect text, or `scan` over any hex dump |
+| tool | `set_session_key`, `derive_key`, `encrypt_payload`, `decrypt_payload` | 0xFD encrypted frames: shared private key or per-device keys, kept in memory only |
+| tool | `encode_frame`, `validate_advert` | build DPI/DFD/DFV frames (optionally encrypted); 31-byte budget |
 | tool | `plan_rotation`, `analyze_rotation` | transmit patterns that meet the 4 s DFD rule |
-| tool | `check_design`, `example_config`, `generate_firmware` | lint a configuration, start from the WYMU one, render `ble_live.c/.h` |
-| prompt | `design_sensor`, `debug_receiver`, `review_layout` | guided workflows |
+| tool | `check_design`, `example_config`, `import_xlsx_file`, `export_xlsx_file`, `generate_firmware` | lint a configuration, convert workbooks, render `ble_live.c/.h` |
+| tool | `scaffold_receiver` | decoder skeleton in python, c, csharp, kotlin or swift with the tables and quirks baked in |
+| prompt | `design_sensor`, `debug_receiver`, `review_layout`, `build_receiver` | guided workflows |
 
 Decoding is stateful because a DFV is only meaningful with its DFD: feed DFDs (or a whole
-capture) before DFVs, in the same `session`.
+capture) before DFVs, in the same `session`. 0xFD frames decrypt once the session has the
+shared private key (`set_session_key`); the key derivation and cipher match the reference
+design, GatewayKit and the WASP .NET library.
 
 ## Library
 
 - `ble_live.spec` — protocol tables (`data/spec.json`), spec text (`data/spec_sections.json`),
   receiver quirks (`data/quirks.json`), golden frames (`data/vectors.json`).
-- `ble_live.codec` — AD structure parsing, `LiveFrame`, stateful `Decoder`, encoders, advert budget.
-- `ble_live.capture` — hex-line and nRF Connect capture parsing with diagnostics.
+- `ble_live.codec` — AD structure parsing, `LiveFrame`, stateful `Decoder` (with a `KeyRing`
+  for 0xFD), encoders, `encrypt_frame`, advert budget.
+- `ble_live.crypto` — AES-128-CTR in plain Python (FIPS-197 and NIST SP 800-38A vectors in the
+  tests), key derivation, `KeyRing`.
+- `ble_live.capture` — hex-line, nRF Connect and scan capture parsing with diagnostics.
 - `ble_live.rotation` — `analyze(pattern, interval_ms)` and `plan(dfv_indexes, interval_ms)`.
 - `ble_live.design` — `check_design(config)` lints.
+- `ble_live.scaffold` — receiver skeletons; the Python one is executed and the C one compiled
+  (gcc) against the golden vectors in the tests.
 - `ble_live.config` / `ble_live.xlsx` — configuration model, JSON, `live.xlsx` import and export.
 - `ble_live.generator` — renders `ble_live.c/.h` from a configuration and the templates. Output for
   the repository's `live.xlsx` matches the committed files byte for byte
@@ -82,6 +91,7 @@ Both JSON files are committed so the package does not depend on the docs checkou
 
 ## Not yet
 
-0xFD decryption, GEM3 multicast and btsnoop capture formats, receiver scaffolds, and the nRF52
-emulator bridge are Phase 2 and 3 in the plan. The decoder has not yet been cross-checked against
-the WASP .NET library on captured frames.
+A GEM3-specific record parser (the `scan` format finds the structures inside its datagrams
+without one), btsnoop/PCAP input, the nRF52 emulator bridge (Phase 3), and a run of the WASP
+.NET library against captured frames. The .NET field sizes were compared by reading its source
+(`tests/test_dotnet_parity.py`).

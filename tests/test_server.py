@@ -70,7 +70,7 @@ def test_decode_wymu_frames():
         "accumulated_power": 160,
     }
     state = call("session_state", session="w")
-    assert state["0xEBC4B6B1"]["dfds"] == {"0": [8, 16, 17]}
+    assert state["devices"]["0xEBC4B6B1"]["dfds"] == {"0": [8, 16, 17]}
     capture = call(
         "decode_capture",
         text=(
