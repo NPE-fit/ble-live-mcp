@@ -1,3 +1,3 @@
-"""BLE Live protocol library: spec tables, configuration model and code generator."""
+"""BLE Live protocol library and MCP server: spec tables, codec, rotation planner, generator."""
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"

@@ -25,7 +25,8 @@ Claude Code / Cursor / VS Code configuration (adjust the path):
 ```
 
 Without an install: `"command": "python", "args": ["-m", "ble_live.server"]` with
-`PYTHONPATH` pointing at `mcp/src`. `BLE_LIVE_ROOT` is only needed when the package does not run
+`PYTHONPATH` pointing at `mcp/src`. The repository's `.mcp.json` does exactly that, so Claude
+Code opened on this checkout loads the server automatically (it needs `pip install mcp openpyxl`). `BLE_LIVE_ROOT` is only needed when the package does not run
 from inside this checkout; it locates `ble_live_base.c/.h` and `live.xlsx` for
 `generate_firmware` and `example_config`.
 
