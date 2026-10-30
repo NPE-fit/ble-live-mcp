@@ -43,7 +43,38 @@ locates `ble_live_base.c/.h` and `live.xlsx` for `generate_firmware` and `exampl
 | tool | `plan_rotation`, `analyze_rotation` | transmit patterns that meet the 4 s DFD rule |
 | tool | `check_design`, `example_config`, `import_xlsx_file`, `export_xlsx_file`, `generate_firmware` | lint a configuration, convert workbooks, render `ble_live.c/.h` |
 | tool | `scaffold_receiver` | decoder skeleton in python, c, csharp, kotlin or swift with the tables and quirks baked in |
+| tool | `list_serial_ports`, `emulator_connect`, `emulator_status`, `emulator_set`, `emulator_auto`, `emulator_set_pattern`, `emulator_set_step`, `emulator_set_serial`, `emulator_command`, `emulator_disconnect` | drive the nRF52 emulator over its serial command channel (`port="mock"` for an in-process stand-in) |
+| tool | `scan_live` | capture from the air for N seconds: a GEM3's multicast stream or this PC's Bluetooth adapter (Windows) |
 | prompt | `design_sensor`, `debug_receiver`, `review_layout`, `build_receiver` | guided workflows |
+
+### Emulator command channel
+
+The demo firmware (`ble_live_demo/examples/ble_peripheral/ble_app_hrs`) exposes a line-based
+CLI on the DK's virtual COM port, 115200 8N1 (`emulator_cli.h` documents it): `get`, `set
+<field> <value>`, `auto on|off`, `step <ms>`, `pattern default|<hex,...>`, `serial <value>`,
+`reset`. Replies are one `OK ...` or `ERR ...` line. Logging moved to RTT so the UART is free.
+With a board on `COM6`:
+
+```text
+emulator_connect(port="COM6") → emulator_set(port="COM6", field="power", value=250)
+plan_rotation(...) → emulator_set_pattern(port="COM6", pattern=[...]) → scan_live("bluetooth", 10)
+```
+
+The firmware builds for all four configurations with SEGGER Embedded Studio 6.22a (`emBuild
+-config Debug ...emProject`); it has not yet been run on a board.
+
+### Hosted instance
+
+```bash
+ble-live-mcp --transport http --host 0.0.0.0 --port 8765 --read-only --token "$BLE_LIVE_MCP_TOKEN"
+docker build -t ble-live-mcp -f mcp/Dockerfile .      # from the repository root
+```
+
+`--read-only` removes the tools that touch the server's files, serial ports or radios
+(`import_xlsx_file`, `export_xlsx_file`, the emulator tools, `scan_live`). A bearer token is
+required unless the server binds to localhost. The endpoint is `/mcp` (streamable HTTP, JSON
+responses, stateless). Where to host it (Azure Container Apps in the NPE Products subscription
+is the natural fit) and whether the proprietary templates may ship in it are open owner decisions.
 
 Decoding is stateful because a DFV is only meaningful with its DFD: feed DFDs (or a whole
 capture) before DFVs, in the same `session`. 0xFD frames decrypt once the session has the
@@ -91,7 +122,8 @@ Both JSON files are committed so the package does not depend on the docs checkou
 
 ## Not yet
 
-A GEM3-specific record parser (the `scan` format finds the structures inside its datagrams
-without one), btsnoop/PCAP input, the nRF52 emulator bridge (Phase 3), and a run of the WASP
-.NET library against captured frames. The .NET field sizes were compared by reading its source
-(`tests/test_dotnet_parity.py`).
+Running the emulator firmware and `scan_live` against real hardware (no DK or GEM3 was
+attached when this was written; the mock transport and loopback multicast are what the tests
+cover), a GEM3-specific record parser (the structure scan does without one), btsnoop/PCAP
+input, deploying the hosted instance, and a run of the WASP .NET library against captured
+frames. The .NET field sizes were compared by reading its source (`tests/test_dotnet_parity.py`).

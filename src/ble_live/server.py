@@ -518,8 +518,18 @@ then show how to verify it with the frames in vectors://frames and, for 0xFD, ho
 implement the decrypt hook with derive_key and decrypt_payload."""
 
 
-def main() -> None:
-    mcp.run("stdio")
+# -- bench tools (emulator serial channel, live scanning) ------------------------------------
+
+from .hardware_tools import register as _register_hardware_tools  # noqa: E402
+
+_register_hardware_tools(mcp, _decoder)
+
+
+def main(argv: list[str] | None = None) -> None:
+    """Entry point: `ble-live-mcp` (stdio) or `ble-live-mcp --transport http --read-only`."""
+    from .hosting import run_from_args
+
+    run_from_args(mcp, argv)
 
 
 if __name__ == "__main__":
