@@ -6,8 +6,8 @@ closes it. Everything outside markers is copied through.
 
 For the repository's `live.xlsx` the output is identical to the original script's
 (`tests/test_generator_regression.py`). Two behaviours of the original are kept on purpose
-until Phase 1 regenerates the committed sources: a missing description renders as the comment
-`// nan`, and the transmit pattern repeats each DFD once per cycle.
+for now: the transmit pattern repeats each DFD once per cycle (the WYMU firmware uses its own
+rotation; `rotation.plan` builds a compliant one).
 """
 
 from __future__ import annotations
@@ -35,7 +35,8 @@ def byte_size(ctype: str) -> int:
 
 
 def _comment(description: str | None) -> str:
-    return "nan" if description is None else description
+    """Trailing C comment for a field or enum member; nothing when there is no description."""
+    return "" if description is None else f" // {description}"
 
 
 class _Model:
@@ -100,7 +101,7 @@ def _enum_struct_defs(m: _Model) -> str:
             continue
         out.append("typedef enum {\n")
         for const, value, description in members:
-            out.append(f"    {const} = {value}, // {_comment(description)}\n")
+            out.append(f"    {const} = {value},{_comment(description)}\n")
         out.append(f"}} {cname}_e;\n\n")
     for s in m.structs:
         if not s.included:
@@ -110,11 +111,11 @@ def _enum_struct_defs(m: _Model) -> str:
             name = c_ident(f.name)
             if f.repeat > 1:
                 out.append("    struct\n    {\n")
-                out.append(f"        {f.type} {name}[{f.repeat}]; // {_comment(f.description)}\n")
+                out.append(f"        {f.type} {name}[{f.repeat}];{_comment(f.description)}\n")
                 out.append(f"        uint8_t {name}_count; // {name} array counter\n")
                 out.append(f"    }} {name};\n")
             else:
-                out.append(f"    {f.type} {name}; // {_comment(f.description)}\n")
+                out.append(f"    {f.type} {name};{_comment(f.description)}\n")
         out.append(f"}} {c_object_name(s.name)}_t;\n\n")
     return "".join(out)
 

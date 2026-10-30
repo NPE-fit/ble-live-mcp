@@ -1,13 +1,14 @@
 [project]
 name = "ble-live"
-version = "0.0.1"
-description = "BLE Live protocol library: spec tables, configuration model and firmware code generator (Phase 0 of the BLE Live MCP server)"
+version = "0.1.0"
+description = "BLE Live protocol library and MCP server: spec tables, codec, rotation planner, design lints and the firmware code generator"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Proprietary" }
 authors = [{ name = "North Pole Engineering, Inc.", email = "npe@npe-inc.com" }]
 dependencies = [
     "openpyxl>=3.1",
+    "mcp>=2.0",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +19,7 @@ dev = [
 
 [project.scripts]
 ble-live = "ble_live.cli:main"
+ble-live-mcp = "ble_live.server:main"
 
 [build-system]
 requires = ["hatchling"]

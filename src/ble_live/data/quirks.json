@@ -1,0 +1,75 @@
+{
+  "description": "How real BLE Live receivers deviate from the PDF, and what a sensor designer must do about it. Dates are when the behaviour was verified against receiver source or on the bench.",
+  "quirks": [
+    {
+      "id": "gatewaykit-equipment-type-0-based",
+      "receiver": "GatewayKit (iOS, NPEBleFitnessData.m)",
+      "summary": "Numbers equipment types from 0 while the spec's Table 10 starts at 1. Only 21 (Activity Monitor) and 120 (Heart Rate Monitor) agree.",
+      "rule": "Say which numbering your receivers use before choosing an Equipment Type value; test with the receiver, not the table.",
+      "verified": "2026-10-21"
+    },
+    {
+      "id": "equipment-type-11-ant-power",
+      "receiver": "WASP .NET library, GEM/WASP gateways",
+      "summary": "WASP keys on Equipment Type 11 as the ANT+ bike power device type and forwards each BLE Live power frame as ANT+ page 0x10. The spec's Table 10 gives 11 to Running Speed. The WYMU live flavor sends 11.",
+      "rule": "A power sensor meant for WASP sends 11. Treat 11 as ambiguous when decoding unknown devices.",
+      "verified": "2026-10-28"
+    },
+    {
+      "id": "gatewaykit-beta-dfd-heuristic",
+      "receiver": "GatewayKit (iOS)",
+      "summary": "If a DFD's first field byte is 0x01, 0x03, 0x07, 0x0F, 0x1F, 0x3F, 0x4F or 0xFF and its popcount equals the number of bytes after it, GatewayKit treats that byte as a flag and drops it.",
+      "rule": "Never start a DFD with such an index when the count matches, e.g. Model # (0x03) followed by two fields. The WYMU lists Firmware Version (5) first for this reason.",
+      "verified": "2026-10-21"
+    },
+    {
+      "id": "gatewaykit-hardware-version-u16",
+      "receiver": "GatewayKit (iOS); spec Appendix B",
+      "summary": "Hardware Version (meta 4) is Uint8 in Table 6 and in the WASP .NET code, but GatewayKit reads two bytes and the spec's own Appendix B example encodes two bytes.",
+      "rule": "Leave Hardware Version out until the spec settles the width.",
+      "verified": "2026-10-21"
+    },
+    {
+      "id": "ios-corebluetooth-hides-0xfe",
+      "receiver": "Any iOS app using CoreBluetooth",
+      "summary": "CoreBluetooth exposes only Apple's fixed advertisementData keys; AD types 0xFE and 0xFD never reach app code. Android (ScanRecord.getBytes) and gateways do see them.",
+      "rule": "iOS apps cannot receive BLE Live directly; route through a WASP/GEM gateway or a connection.",
+      "verified": "2026-10-21"
+    },
+    {
+      "id": "passive-scanners-need-primary-advert",
+      "receiver": "WASP/GEM radios in passive scan mode, DFU Helper",
+      "summary": "A passive scanner never sees the scan response. The reference design puts the live structure in the scan response; the WYMU moved it to the primary advert (flags + manufacturer data + live frame) and the name to the scan response.",
+      "rule": "Put the BLE Live structure in the primary advertising packet and budget 31 bytes around it. Apps that identify the device by name must use manufacturer data instead.",
+      "verified": "2026-10-19"
+    },
+    {
+      "id": "0xfd-crypto-defined-only-in-code",
+      "receiver": "GatewayKit NPEBLELiveData.m, WASP .NET, this reference design",
+      "summary": "Key = SHA-256(private key 16 B || device id 4 B LE)[0:16]; AES-128-CTR with counter block = fixed nonce 01..0C || 4-byte counter; the counter is sent little-endian after the device id; no MAC. None of this is in the spec text.",
+      "rule": "Implement exactly this or nothing decrypts; expect the spec to document it in a later revision.",
+      "verified": "2026-10-21"
+    },
+    {
+      "id": "dpi-truncation",
+      "receiver": "All",
+      "summary": "The DPI may be truncated after the last non-zero byte (spec 1.1). The WYMU sends FF 01 03.",
+      "rule": "Decoders must accept 1 to 8 DPI bytes.",
+      "verified": "2026-10-28"
+    },
+    {
+      "id": "nordic-sdk-advdata-patch",
+      "receiver": "n/a (sensor side)",
+      "summary": "nRF5 SDK's ble_advdata has no AD type 0xFE/0xFD; the reference design patches ble_advdata.c/.h with ble_advdata_live_data_t and p_live_broadcast_data.",
+      "rule": "On another SDK, append the raw structure yourself: length, 0xFE, device id LE, DI, payload.",
+      "verified": "2026-10-29"
+    },
+    {
+      "id": "bench-capture-routes",
+      "receiver": "Bench tooling",
+      "summary": "To see raw 0xFE/0xFD frames: a GEM3 PoE forwards raw adverts in its multicast stream; nRF Connect for Mobile on Android shows 'Unknown EIR (0xFE): <hex>'. macOS cannot (CoreBluetooth), and passive helpers miss scan responses.",
+      "rule": "Capture with Android nRF Connect or a GEM3; paste the hex into decode_capture.",
+      "verified": "2026-10-28"
+    }
+  ]
+}
