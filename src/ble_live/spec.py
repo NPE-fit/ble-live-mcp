@@ -42,6 +42,11 @@ def load_vectors() -> dict[str, Any]:
     return _load("vectors.json")
 
 
+def load_example(name: str) -> dict[str, Any]:
+    """A packaged example configuration (data/examples/<name>.json)."""
+    return _load(f"examples/{name}.json")
+
+
 def version() -> str:
     return load_spec()["spec_version"]
 

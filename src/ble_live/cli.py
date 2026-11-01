@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -64,7 +65,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     g = sub.add_parser("generate", help="render ble_live.c/.h from a config (xlsx or JSON)")
     g.add_argument("config")
-    g.add_argument("--templates", default=".", help="directory holding ble_live_base.c/.h")
+    g.add_argument(
+        "--templates",
+        default=os.environ.get("BLE_LIVE_ROOT", "."),
+        help="directory holding ble_live_base.c/.h (default: $BLE_LIVE_ROOT or .)",
+    )
     g.add_argument("--out", help="output directory (default: the templates directory)")
     g.set_defaults(func=cmd_generate)
 

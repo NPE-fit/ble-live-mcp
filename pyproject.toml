@@ -1,21 +1,41 @@
 [project]
-name = "ble-live"
+name = "ble-live-mcp"
 version = "0.1.0"
-description = "BLE Live protocol library and MCP server: spec tables, codec, rotation planner, design lints and the firmware code generator"
+description = "MCP server and Python library for NPE's BLE Live protocol: spec tables, frame codec, 0xFD crypto, rotation planner, design lints, receiver scaffolds, firmware generator and bench tools"
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Proprietary" }
 authors = [{ name = "North Pole Engineering, Inc.", email = "npe@npe-inc.com" }]
+keywords = ["ble", "bluetooth", "advertising", "fitness", "mcp", "model-context-protocol", "npe"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: System :: Networking",
+]
 dependencies = [
     "openpyxl>=3.1",
     "mcp>=2.0",
 ]
 
 [project.optional-dependencies]
+bench = [
+    "pyserial>=3.5",
+    "bleak>=0.22",
+]
 dev = [
     "pytest>=8",
     "ruff>=0.5",
+    "httpx>=0.27",
 ]
+
+[project.urls]
+Homepage = "https://github.com/NPE-fit/ble-live-mcp"
+Issues = "https://github.com/NPE-fit/ble-live-mcp/issues"
+Specification = "https://cdn.shopify.com/s/files/1/0558/2074/6861/files/ble-live-protocol.pdf"
 
 [project.scripts]
 ble-live = "ble_live.cli:main"

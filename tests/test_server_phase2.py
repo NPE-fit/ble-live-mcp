@@ -1,12 +1,10 @@
 """Phase 2 server tools: keys and 0xFD, scaffolds, xlsx files."""
 
 import asyncio
-from pathlib import Path
 
 from ble_live import crypto, server
 from ble_live.codec import bytes_to_hex
 
-ROOT = Path(__file__).resolve().parents[2]
 PRIVATE_HEX = bytes_to_hex(bytes(range(16)))
 DEVICE = 0xEBC4B6B1
 
@@ -85,8 +83,7 @@ def test_scan_format_through_tool():
 def test_scaffold_and_xlsx_tools(tmp_path):
     py = call("scaffold_receiver", language="python")
     assert py["filename"] == "ble_live_receiver.py" and "class LiveDecoder" in py["source"]
-    cfg = call("import_xlsx_file", path=str(ROOT / "live.xlsx"))
-    assert cfg["spec_version"] == "1.7.0" and len(cfg["objects"]) == 3
+    cfg = call("example_config")
     out = call("export_xlsx_file", config=cfg, path=str(tmp_path / "copy.xlsx"))
     assert out["objects"] == 3
     again = call("import_xlsx_file", path=str(tmp_path / "copy.xlsx"))

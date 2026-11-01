@@ -59,11 +59,10 @@ def _decoder(session: str) -> Decoder:
 
 
 def repo_root() -> Path | None:
-    """Where ble_live_base.c/.h live: $BLE_LIVE_ROOT or the checkout this package sits in."""
+    """Where ble_live_base.c/.h live: $BLE_LIVE_ROOT, else the current directory. The
+    templates ship with NPE's BLE Live reference design, not with this package."""
     env = os.environ.get("BLE_LIVE_ROOT")
-    candidates = [Path(env)] if env else []
-    candidates.append(Path(__file__).resolve().parents[3])
-    for c in candidates:
+    for c in ([Path(env)] if env else []) + [Path.cwd()]:
         if (c / "ble_live_base.c").exists() and (c / "ble_live_base.h").exists():
             return c
     return None
@@ -72,7 +71,10 @@ def repo_root() -> Path | None:
 def _require_root() -> Path:
     root = repo_root()
     if root is None:
-        raise FileNotFoundError("templates not found; set BLE_LIVE_ROOT to the ble_live checkout")
+        raise FileNotFoundError(
+            "templates not found; set BLE_LIVE_ROOT to a checkout of NPE's BLE Live reference "
+            "design (ble_live_base.c/.h)"
+        )
     return root
 
 
@@ -423,7 +425,7 @@ def check_design(
 @mcp.tool()
 def generate_firmware(config: dict[str, Any]) -> dict[str, Any]:
     """Render ble_live.c and ble_live.h from a configuration using the reference design
-    templates (BLE_LIVE_ROOT or the checkout this server runs from)."""
+    templates: set BLE_LIVE_ROOT to a checkout of NPE's reference design."""
     root = _require_root()
     cfg = LiveConfig.from_dict(config)
     problems = cfg.validate()
@@ -434,14 +436,9 @@ def generate_firmware(config: dict[str, Any]) -> dict[str, Any]:
 
 @mcp.tool()
 def example_config() -> dict[str, Any]:
-    """The WYMU v1.7.0 configuration (power meter) as a starting point for check_design and
-    generate_firmware."""
-    root = repo_root()
-    if root is None or not (root / "live.xlsx").exists():
-        raise FileNotFoundError("live.xlsx not found; set BLE_LIVE_ROOT to the ble_live checkout")
-    cfg = import_xlsx(root / "live.xlsx")
-    cfg.spec_version = spec.version()
-    return cfg.to_dict()
+    """An example configuration to start from: NPE's WYMU power meter (spec 1.7.0), with
+    Power, Power Event Count and Accumulated Power in DFV 0 and the meta data in DFV 8 and 9."""
+    return spec.load_example("power_meter")
 
 
 @mcp.tool()

@@ -1,30 +1,28 @@
-from pathlib import Path
-
 from ble_live.codec import AdvertLayout
 from ble_live.config import Field, LiveConfig, Struct
 from ble_live.design import check_design, frame_payload_sizes, legacy_tx_pattern
-from ble_live.xlsx import import_xlsx
-
-ROOT = Path(__file__).resolve().parents[2]
 
 
 def codes(findings, severity=None):
     return [f.code for f in findings if severity is None or f.severity == severity]
 
 
-def test_wymu_config_lints_clean_but_notes_rotation():
-    cfg = import_xlsx(ROOT / "live.xlsx")
-    sizes = frame_payload_sizes(cfg)
+def test_example_config_lints_clean_but_notes_rotation(example_cfg):
+    sizes = frame_payload_sizes(example_cfg)
     assert sizes == {0xFF: 8, 0x40: 3, 0x00: 6, 0x48: 5, 0x08: 7, 0x49: 3, 0x09: 7}
-    assert legacy_tx_pattern(cfg) == [0xFF, 0x40, 0x48, 0x49, 0x00, 0x00, 0x00, 0x00, 0x08, 0x09]
-    findings = check_design(cfg, interval_ms=546.25, layout=AdvertLayout(manufacturer_data_bytes=6))
+    assert legacy_tx_pattern(example_cfg) == [
+        0xFF, 0x40, 0x48, 0x49, 0x00, 0x00, 0x00, 0x00, 0x08, 0x09,
+    ]  # fmt: skip
+    findings = check_design(
+        example_cfg, interval_ms=546.25, layout=AdvertLayout(manufacturer_data_bytes=6)
+    )
     assert codes(findings, "error") == []
     assert "legacy-rotation" in codes(findings, "warning")
     assert "equipment-type-numbering" in codes(findings, "info")
     # DFV 9 lists Firmware Version (0x05) before Model Number (0x03), so the DFD does not start
     # with a byte GatewayKit's beta-DFD heuristic would drop as a flag.
     assert "gatewaykit-dfd-heuristic" not in codes(findings)
-    # the generator writes all 8 DPI bytes, so the DPI is the largest frame of the emulator
+    # the generator writes all 8 DPI bytes, so the DPI is the largest frame
     largest = next(f for f in findings if f.code == "largest-frame")
     assert "0xFF" in largest.message and "28 of 31" in largest.message
     assert "dpi-truncation" in codes(findings, "info")

@@ -31,8 +31,8 @@ def run(coro):
 
 
 def structured(result):
-    if getattr(result, "structuredContent", None) is not None:
-        return result.structuredContent
+    if getattr(result, "structured_content", None) is not None:
+        return result.structured_content
     text = next(c.text for c in result.content if getattr(c, "type", "") == "text")
     return json.loads(text)
 
@@ -103,9 +103,22 @@ def test_encode_validate_plan():
 
 def test_design_tools_with_example_config():
     cfg = call("example_config")
+    assert cfg["spec_version"] == "1.7.0" and len(cfg["objects"]) == 3
     report = call("check_design", config=cfg, interval_ms=546.25, manufacturer_data_bytes=6)
     assert report["errors"] == 0 and report["warnings"] >= 1
-    fw = call("generate_firmware", config=cfg)
+
+
+def test_generate_firmware_needs_templates(monkeypatch, tmp_path):
+    monkeypatch.setenv("BLE_LIVE_ROOT", str(tmp_path))
+    monkeypatch.chdir(tmp_path)
+    # the SDK reports the failure under the tool's name; the inner error text stays server-side
+    with pytest.raises(Exception, match="generate_firmware"):
+        run(server.mcp.call_tool("generate_firmware", {"config": call("example_config")}))
+
+
+def test_generate_firmware_with_reference_design(ref_root, monkeypatch):
+    monkeypatch.setenv("BLE_LIVE_ROOT", str(ref_root))
+    fw = call("generate_firmware", config=call("example_config"))
     assert "BLE_LIVE_FITNESS_DATA_POWER = 8" in fw["files"]["ble_live.h"]
     assert "static uint8_t tx_pattern[]" in fw["files"]["ble_live.c"]
 

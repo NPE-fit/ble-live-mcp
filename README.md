@@ -1,129 +1,141 @@
-# ble_live (Python) and the BLE Live MCP server
+# BLE Live MCP server
 
-Library and MCP server behind `../docs/mcp-server-plan.md`.
+An [MCP](https://modelcontextprotocol.io) server that gives AI coding assistants (Claude Code,
+Cursor, VS Code, Claude Desktop) grounded knowledge of NPE's **BLE Live** protocol and working
+tools to build sensors and receivers for it. BLE Live puts real-time fitness data (power, heart
+rate, cadence, R-R intervals, ...) in the BLE advertising packet, so any scanner can read it
+without a connection. The [protocol specification](https://cdn.shopify.com/s/files/1/0558/2074/6861/files/ble-live-protocol.pdf)
+is the source of the tables and text the server serves.
 
-## MCP server
+The same code is a plain Python library (`ble_live`) with a CLI, usable without any MCP client.
 
-The server gives an AI coding assistant grounded BLE Live knowledge and working tools over stdio.
+## Install
+
+Python 3.11 or newer.
 
 ```bash
-cd mcp
-python -m pip install -e .          # installs ble-live and ble-live-mcp
+pip install "git+https://github.com/NPE-fit/ble-live-mcp.git"
 ```
 
-Claude Code / Cursor / VS Code configuration (adjust the path):
+With the bench extras (serial port to the nRF52 emulator, Bluetooth scanning):
+
+```bash
+pip install "ble-live-mcp[bench] @ git+https://github.com/NPE-fit/ble-live-mcp.git"
+```
+
+Or run it without installing, with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uvx --from "git+https://github.com/NPE-fit/ble-live-mcp.git" ble-live-mcp
+```
+
+## Connect your assistant
+
+**Claude Code**
+
+```bash
+claude mcp add ble-live -- ble-live-mcp
+```
+
+or, project-wide, commit this `.mcp.json` next to your code:
+
+```json
+{ "mcpServers": { "ble-live": { "command": "ble-live-mcp" } } }
+```
+
+**Cursor, VS Code (Copilot agent mode), Claude Desktop, Windsurf** — add the same server to
+the client's MCP configuration:
 
 ```json
 {
   "mcpServers": {
     "ble-live": {
       "command": "ble-live-mcp",
-      "env": { "BLE_LIVE_ROOT": "C:/path/to/ble_live" }
+      "env": { "BLE_LIVE_ROOT": "/path/to/npe-ble-live-reference-design" }
     }
   }
 }
 ```
 
-Without an install: `"command": "python", "args": ["-m", "ble_live.server"]` with
-`PYTHONPATH` pointing at `mcp/src`. The repository's `.mcp.json` does exactly that, so Claude
-Code opened on this checkout loads the server automatically (it needs `pip install mcp openpyxl`).
-`BLE_LIVE_ROOT` is only needed when the package does not run from inside this checkout; it
-locates `ble_live_base.c/.h` and `live.xlsx` for `generate_firmware` and `example_config`.
+`BLE_LIVE_ROOT` is optional. It points at a checkout of NPE's BLE Live reference design, whose
+`ble_live_base.c/.h` templates the `generate_firmware` tool fills in. Every other tool works
+without it. Ask NPE for the reference design.
 
-| Surface | Name | What it does |
+Then ask your assistant things like:
+
+- "Decode this advert from nRF Connect: `Unknown EIR (0xFE): B1 B6 C4 EB 40 08 10 11`"
+- "I'm building a rower that broadcasts stroke rate and power. Design its BLE Live packets,
+  check the 31-byte budget and plan a rotation for a 211 ms advertising interval."
+- "Scaffold a Kotlin receiver for Android and show me how to feed it scan records."
+- "Why does my gateway see the device but never decodes values? Here is a capture..."
+
+The server ships with prompts for exactly these workflows: `design_sensor`, `debug_receiver`,
+`review_layout`, `build_receiver`.
+
+## What the server provides
+
+| Kind | Name | What it does |
 |---|---|---|
-| resource | `spec://ble-live/toc`, `spec://ble-live/section/{id}` | spec text (AsciiDoc) by section |
+| resource | `spec://ble-live/toc`, `spec://ble-live/section/{id}` | spec text by section |
 | resource | `fields://fitness`, `fields://meta`, `fields://equipment` | field tables with sizes and units |
-| resource | `spec://ble-live/di-ranges`, `vectors://frames`, `quirks://receivers` | DI map, golden frames, receiver deviations |
-| resource | `refdesign://templates/{name}` | `ble_live_base.c` / `.h` |
+| resource | `spec://ble-live/di-ranges`, `vectors://frames`, `quirks://receivers` | data identifier map, golden frames, how real receivers deviate from the PDF |
+| resource | `refdesign://templates/{name}` | the reference design templates (needs `BLE_LIVE_ROOT`) |
 | tool | `spec_search`, `spec_section`, `list_fields`, `list_quirks` | look things up |
-| tool | `decode_frame`, `decode_capture`, `session_state`, `reset_session` | stateful decoding of frames; captures as hex lines, nRF Connect text, or `scan` over any hex dump |
-| tool | `set_session_key`, `derive_key`, `encrypt_payload`, `decrypt_payload` | 0xFD encrypted frames: shared private key or per-device keys, kept in memory only |
-| tool | `encode_frame`, `validate_advert` | build DPI/DFD/DFV frames (optionally encrypted); 31-byte budget |
-| tool | `plan_rotation`, `analyze_rotation` | transmit patterns that meet the 4 s DFD rule |
-| tool | `check_design`, `example_config`, `import_xlsx_file`, `export_xlsx_file`, `generate_firmware` | lint a configuration, convert workbooks, render `ble_live.c/.h` |
-| tool | `scaffold_receiver` | decoder skeleton in python, c, csharp, kotlin or swift with the tables and quirks baked in |
-| tool | `list_serial_ports`, `emulator_connect`, `emulator_status`, `emulator_set`, `emulator_auto`, `emulator_set_pattern`, `emulator_set_step`, `emulator_set_serial`, `emulator_command`, `emulator_disconnect` | drive the nRF52 emulator over its serial command channel (`port="mock"` for an in-process stand-in) |
-| tool | `scan_live` | capture from the air for N seconds: a GEM3's multicast stream or this PC's Bluetooth adapter (Windows) |
-| prompt | `design_sensor`, `debug_receiver`, `review_layout`, `build_receiver` | guided workflows |
+| tool | `decode_frame`, `decode_capture`, `session_state`, `reset_session` | stateful decoding of single frames or captures (hex lines, nRF Connect text, or `scan` over any hex dump) |
+| tool | `set_session_key`, `derive_key`, `encrypt_payload`, `decrypt_payload` | 0xFD encrypted frames; keys stay in memory |
+| tool | `encode_frame`, `validate_advert` | build DPI/DFD/DFV frames; check the 31-byte advertising budget |
+| tool | `plan_rotation`, `analyze_rotation` | transmit patterns that meet the spec's 4 s definition rule |
+| tool | `check_design`, `example_config`, `import_xlsx_file`, `export_xlsx_file`, `generate_firmware` | lint a sensor configuration, convert the reference design's workbook, render `ble_live.c/.h` |
+| tool | `scaffold_receiver` | decoder skeleton in Python, C, C#, Kotlin or Swift with the tables and quirks baked in |
+| tool | `list_serial_ports`, `emulator_*` | drive NPE's nRF52 emulator firmware over its serial command channel (`port="mock"` for an in-process stand-in) |
+| tool | `scan_live` | capture frames from the air: a GEM3 gateway's multicast stream, or this PC's Bluetooth adapter (Windows) |
 
-### Emulator command channel
+Decoding is stateful because a value packet (DFV) is only meaningful with its definition
+packet (DFD): feed definitions, or a whole capture, before values, in the same `session`.
+Encrypted (0xFD) frames decrypt once the session has the shared private key.
 
-The demo firmware (`ble_live_demo/examples/ble_peripheral/ble_app_hrs`) exposes a line-based
-CLI on the DK's virtual COM port, 115200 8N1 (`emulator_cli.h` documents it): `get`, `set
-<field> <value>`, `auto on|off`, `step <ms>`, `pattern default|<hex,...>`, `serial <value>`,
-`reset`. Replies are one `OK ...` or `ERR ...` line. Logging moved to RTT so the UART is free.
-With a board on `COM6`:
+## Command line
 
-```text
-emulator_connect(port="COM6") → emulator_set(port="COM6", field="power", value=250)
-plan_rotation(...) → emulator_set_pattern(port="COM6", pattern=[...]) → scan_live("bluetooth", 10)
+```bash
+ble-live spec fields meta                      # the meta field table as JSON
+ble-live import-xlsx live.xlsx -o live.json    # reference design workbook -> JSON config
+ble-live export-xlsx live.json -o live.xlsx
+ble-live generate live.json --templates /path/to/reference-design --out .
+ble-live-mcp --help                            # transports and hosting options
 ```
 
-The firmware builds for all four configurations with SEGGER Embedded Studio 6.22a (`emBuild
--config Debug ...emProject`); it has not yet been run on a board.
-
-### Hosted instance
+## Hosting a shared instance
 
 ```bash
 ble-live-mcp --transport http --host 0.0.0.0 --port 8765 --read-only --token "$BLE_LIVE_MCP_TOKEN"
-docker build -t ble-live-mcp -f mcp/Dockerfile .      # from the repository root
+docker build -t ble-live-mcp . && docker run -p 8765:8765 -e BLE_LIVE_MCP_TOKEN=change-me ble-live-mcp
 ```
 
-`--read-only` removes the tools that touch the server's files, serial ports or radios
-(`import_xlsx_file`, `export_xlsx_file`, the emulator tools, `scan_live`). A bearer token is
-required unless the server binds to localhost. The endpoint is `/mcp` (streamable HTTP, JSON
-responses, stateless). Where to host it (Azure Container Apps in the NPE Products subscription
-is the natural fit) and whether the proprietary templates may ship in it are open owner decisions.
+`--read-only` removes the tools that touch the host's files, serial ports or radios. A bearer
+token is required unless the server binds to localhost. The endpoint is `/mcp` (streamable
+HTTP). Mount a reference design checkout and set `BLE_LIVE_ROOT` to enable `generate_firmware`.
 
-Decoding is stateful because a DFV is only meaningful with its DFD: feed DFDs (or a whole
-capture) before DFVs, in the same `session`. 0xFD frames decrypt once the session has the
-shared private key (`set_session_key`); the key derivation and cipher match the reference
-design, GatewayKit and the WASP .NET library.
-
-## Library
-
-- `ble_live.spec` — protocol tables (`data/spec.json`), spec text (`data/spec_sections.json`),
-  receiver quirks (`data/quirks.json`), golden frames (`data/vectors.json`).
-- `ble_live.codec` — AD structure parsing, `LiveFrame`, stateful `Decoder` (with a `KeyRing`
-  for 0xFD), encoders, `encrypt_frame`, advert budget.
-- `ble_live.crypto` — AES-128-CTR in plain Python (FIPS-197 and NIST SP 800-38A vectors in the
-  tests), key derivation, `KeyRing`.
-- `ble_live.capture` — hex-line, nRF Connect and scan capture parsing with diagnostics.
-- `ble_live.rotation` — `analyze(pattern, interval_ms)` and `plan(dfv_indexes, interval_ms)`.
-- `ble_live.design` — `check_design(config)` lints.
-- `ble_live.scaffold` — receiver skeletons; the Python one is executed and the C one compiled
-  (gcc) against the golden vectors in the tests.
-- `ble_live.config` / `ble_live.xlsx` — configuration model, JSON, `live.xlsx` import and export.
-- `ble_live.generator` — renders `ble_live.c/.h` from a configuration and the templates. Output for
-  the repository's `live.xlsx` matches the committed files byte for byte
-  (`tests/test_generator_regression.py`).
+## Development
 
 ```bash
-ble-live generate ../live.xlsx --templates .. --out ..
-ble-live import-xlsx ../live.xlsx -o live.json
-ble-live export-xlsx live.json -o live-copy.xlsx
-ble-live spec fields meta
-python -m pytest
+git clone https://github.com/NPE-fit/ble-live-mcp.git && cd ble-live-mcp
+pip install -e ".[dev,bench]"
+pytest            # ~110 tests; the generator regression test runs when BLE_LIVE_ROOT is set
 ruff check . && ruff format --check .
 ```
 
-`python live.py` at the repository root still works; it is a shim over this package.
+The spec tables and text (`src/ble_live/data/spec*.json`) are extracted from the AsciiDoc
+source of the specification with `scripts/extract_spec.py` and `scripts/extract_sections.py`;
+the JSON is committed so the package does not depend on that source. `data/quirks.json`
+records how real receivers deviate from the PDF; `data/vectors.json` holds golden frames from
+the spec's Appendix B and NPE's WYMU sensor; `data/examples/power_meter.json` is the sample
+configuration `example_config` returns.
 
-## Regenerating the spec data
+Branching follows NPE's standard: `main` holds releases, `develop` is the integration branch,
+work happens on `feature/*` branches.
 
-```bash
-ADOC="../../application-notes/ble live/ble-live-protocol.adoc"
-python scripts/extract_spec.py "$ADOC" src/ble_live/data/spec.json
-python scripts/extract_sections.py "$ADOC" src/ble_live/data/spec_sections.json
-```
+## License
 
-Both JSON files are committed so the package does not depend on the docs checkout.
-
-## Not yet
-
-Running the emulator firmware and `scan_live` against real hardware (no DK or GEM3 was
-attached when this was written; the mock transport and loopback multicast are what the tests
-cover), a GEM3-specific record parser (the structure scan does without one), btsnoop/PCAP
-input, deploying the hosted instance, and a run of the WASP .NET library against captured
-frames. The .NET field sizes were compared by reading its source (`tests/test_dotnet_parity.py`).
+To be confirmed by North Pole Engineering, Inc. Until a license file is added, all rights are
+reserved. The BLE Live specification is published separately by NPE; the firmware templates
+that `generate_firmware` needs are part of NPE's reference design and are not included here.

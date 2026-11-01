@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ble-live": {
+      "command": "python",
+      "args": ["-m", "ble_live.server"],
+      "env": { "PYTHONPATH": "src" }
+    }
+  }
+}

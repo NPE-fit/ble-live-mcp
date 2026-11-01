@@ -1,0 +1,431 @@
+{
+  "spec_version": "1.7.0",
+  "objects": [
+    {
+      "name": "Fitness Data",
+      "repeat": 4,
+      "dfv_min": 0,
+      "dfv_max": 7,
+      "fields": [
+        {
+          "name": "Heart Rate",
+          "type": "uint8_t",
+          "value": 0,
+          "description": "1 BPM",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Cadence",
+          "type": "uint8_t",
+          "value": 1,
+          "description": "1 RPM",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Step Rate",
+          "type": "uint8_t",
+          "value": 2,
+          "description": "Steps Per Minute",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Stride Rate",
+          "type": "uint8_t",
+          "value": 3,
+          "description": "Strides Per Minute",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Active Calories",
+          "type": "uint16_t",
+          "value": 4,
+          "description": "1 KCal",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Total Calories",
+          "type": "uint16_t",
+          "value": 5,
+          "description": "1 KCal",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Speed",
+          "type": "uint16_t",
+          "value": 6,
+          "description": "0.01 KPH",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Accumulated Distance",
+          "type": "uint16_t",
+          "value": 7,
+          "description": "1m",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Power",
+          "type": "uint16_t",
+          "value": 8,
+          "description": "1W. WYMU: activity intensity (mean low-pass |accel| x 20), the same value CPS and ANT+ BPWR send as watts",
+          "include": true,
+          "dfv": 0,
+          "repeat": 1
+        },
+        {
+          "name": "Instantaneous Pace",
+          "type": "uint16_t",
+          "value": 9,
+          "description": "Time per 500 m",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Workout State",
+          "type": "uint8_t",
+          "value": 10,
+          "description": "Units TBD in spec v1.6.0",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Step Count",
+          "type": "uint16_t",
+          "value": 11,
+          "description": "1 Step",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Stride Count",
+          "type": "uint16_t",
+          "value": 12,
+          "description": "1 Stride",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Temperature",
+          "type": "uint16_t",
+          "value": 13,
+          "description": "0.01C",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Heart Beat Count",
+          "type": "uint8_t",
+          "value": 14,
+          "description": "Count",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Heart Rate Confidence",
+          "type": "uint8_t",
+          "value": 15,
+          "description": "1%",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Power Event Count",
+          "type": "uint8_t",
+          "value": 16,
+          "description": "Increments on every Power update (every 1 s in the WYMU); rolls over at 255. Same role as the ANT+ Bicycle Power page 0x10 event count",
+          "include": true,
+          "dfv": 0,
+          "repeat": 1
+        },
+        {
+          "name": "Accumulated Power",
+          "type": "uint16_t",
+          "value": 17,
+          "description": "Running sum of Power at each event, 1 W; rolls over at 65535. Same role as the ANT+ Bicycle Power page 0x10 accumulated power",
+          "include": true,
+          "dfv": 0,
+          "repeat": 1
+        }
+      ],
+      "notes": "Fitness Data is repeated 4 times in the transmission pattern",
+      "kind": "struct"
+    },
+    {
+      "name": "Meta Data",
+      "repeat": 1,
+      "dfv_min": 8,
+      "dfv_max": 15,
+      "fields": [
+        {
+          "name": "Protocol Version",
+          "type": "uint8_t",
+          "value": 0,
+          "description": "BLE Live protocol version. WYMU sends 1",
+          "include": true,
+          "dfv": 8,
+          "repeat": 1
+        },
+        {
+          "name": "Battery Percent",
+          "type": "uint8_t",
+          "value": 1,
+          "description": "1%. Not sent: a 2.8 V-ceiling coin cell has no honest percentage",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Battery Voltage",
+          "type": "uint16_t",
+          "value": 2,
+          "description": "0.01 V. Omitted from the frame until the first measurement",
+          "include": true,
+          "dfv": 8,
+          "repeat": 1
+        },
+        {
+          "name": "Firmware Version",
+          "type": "uint16_t",
+          "value": 5,
+          "description": "Same packing as ANT+ page 81: major<<12 | minor<<6 | patch (tweak not included). Listed before Model Number so DFD 9 does not start with 0x03, which GatewayKit's beta-DFD heuristic would drop as a flag byte",
+          "include": true,
+          "dfv": 9,
+          "repeat": 1
+        },
+        {
+          "name": "Model Number",
+          "type": "uint16_t",
+          "value": 3,
+          "description": "Same as ANT+ page 80 model number: 36352 (0x8E00)",
+          "include": true,
+          "dfv": 9,
+          "repeat": 1
+        },
+        {
+          "name": "Hardware Version",
+          "type": "uint8_t",
+          "value": 4,
+          "description": "Not sent: GatewayKit reads this as u16, the spec and .NET as u8",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Bootloader Version",
+          "type": "uint16_t",
+          "value": 6,
+          "description": null,
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Supported BLE Connections",
+          "type": "uint8_t",
+          "value": 7,
+          "description": "WYMU: 2",
+          "include": true,
+          "dfv": 8,
+          "repeat": 1
+        },
+        {
+          "name": "Available BLE Connections",
+          "type": "uint8_t",
+          "value": 8,
+          "description": "2 minus open connections",
+          "include": true,
+          "dfv": 8,
+          "repeat": 1
+        },
+        {
+          "name": "RSSI at 1 Meter",
+          "type": "int8_t",
+          "value": 9,
+          "description": "dBm",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Equipment Type",
+          "type": "ble_live_equipment_type_e",
+          "value": 10,
+          "description": "WYMU sends 11 (Power Meter)",
+          "include": true,
+          "dfv": 8,
+          "repeat": 1
+        },
+        {
+          "name": "ANT Manufacturer ID",
+          "type": "uint16_t",
+          "value": 11,
+          "description": "Same as ANT+ page 80 manufacturer ID: 66",
+          "include": true,
+          "dfv": 9,
+          "repeat": 1
+        },
+        {
+          "name": "LED Intensity",
+          "type": "uint8_t",
+          "value": 12,
+          "description": "1%",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Zone Threshold FDI",
+          "type": "uint8_t",
+          "value": 13,
+          "description": null,
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        },
+        {
+          "name": "Zone Threshold Size",
+          "type": "uint8_t",
+          "value": 14,
+          "description": "Size in bits of the values in the threshold array",
+          "include": false,
+          "dfv": null,
+          "repeat": 1
+        }
+      ],
+      "notes": "Meta Data is repeated once in the transmission pattern",
+      "kind": "struct"
+    },
+    {
+      "name": "Equipment Type",
+      "members": [
+        {
+          "name": "Foot Pod",
+          "value": 1,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Treadmill",
+          "value": 2,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Rower",
+          "value": 3,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Climber",
+          "value": 4,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Indoor Cycling",
+          "value": 5,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Cross Trainer",
+          "value": 6,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Bike Power Meter",
+          "value": 7,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Cycling Speed",
+          "value": 8,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Cycling Cadence",
+          "value": 9,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Running Cadence",
+          "value": 10,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Power Meter",
+          "value": 11,
+          "description": "ANT+ Bike Power device type. Spec v1.6.0 Table 10 lists Bike Power Meter as 7 and 11 as Running Speed; 21 and 120 in that table are the ANT+ numbers, so is this",
+          "include": true
+        },
+        {
+          "name": "Running Speed",
+          "value": 11,
+          "description": "Spec value 11 clashes with Power Meter; left out of the generated enum",
+          "include": false
+        },
+        {
+          "name": "Running Dynamics",
+          "value": 12,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Sweat",
+          "value": 13,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Temperature",
+          "value": 14,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Activity Monitor",
+          "value": 21,
+          "description": null,
+          "include": true
+        },
+        {
+          "name": "Heart Rate Monitor",
+          "value": 120,
+          "description": null,
+          "include": true
+        }
+      ],
+      "notes": "Spec v1.6.0 Table 10 values. GatewayKit numbers these from 0; only 21 and 120 agree",
+      "kind": "enum"
+    }
+  ]
+}
