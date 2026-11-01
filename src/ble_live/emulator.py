@@ -8,6 +8,7 @@ command handling in Python so the tools and tests work without hardware.
 
 from __future__ import annotations
 
+import importlib
 import time
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -307,7 +308,8 @@ def list_ports() -> list[dict[str, Any]]:
     """Serial ports that could carry the emulator CLI. The LG monitor's control endpoint
     (VID 043E, PID 9A39) is left out entirely; J-Link and Nordic VIDs are flagged as likely."""
     try:
-        from serial.tools import list_ports as lp  # type: ignore[import-untyped]
+        # by dotted name so a stand-in registered in sys.modules works without pyserial
+        lp = importlib.import_module("serial.tools.list_ports")
     except ImportError:
         return []
     out = []

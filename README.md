@@ -14,20 +14,22 @@ The same code is a plain Python library (`ble_live`) with a CLI, usable without 
 Python 3.11 or newer.
 
 ```bash
-pip install "git+https://github.com/NPE-fit/ble-live-mcp.git"
+pip install "git+https://github.com/NPE-fit/ble-live-mcp.git@main"
 ```
 
 With the bench extras (serial port to the nRF52 emulator, Bluetooth scanning):
 
 ```bash
-pip install "ble-live-mcp[bench] @ git+https://github.com/NPE-fit/ble-live-mcp.git"
+pip install "ble-live-mcp[bench] @ git+https://github.com/NPE-fit/ble-live-mcp.git@main"
 ```
 
 Or run it without installing, with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uvx --from "git+https://github.com/NPE-fit/ble-live-mcp.git" ble-live-mcp
+uvx --from "git+https://github.com/NPE-fit/ble-live-mcp.git@main" ble-live-mcp
 ```
+
+`main` holds tagged releases (`v0.1.0` is the first); `develop` is the integration branch.
 
 ## Connect your assistant
 
@@ -131,8 +133,8 @@ records how real receivers deviate from the PDF; `data/vectors.json` holds golde
 the spec's Appendix B and NPE's WYMU sensor; `data/examples/power_meter.json` is the sample
 configuration `example_config` returns.
 
-Branching follows NPE's standard: `main` holds releases, `develop` is the integration branch,
-work happens on `feature/*` branches.
+Branching follows NPE's standard: `main` holds releases (annotated `vX.Y.Z` tags), `develop`
+is the integration branch, work happens on `feature/*` and `bugfix/*` branches.
 
 ## License
 
